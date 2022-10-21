@@ -1,0 +1,29 @@
+{
+  "name": "graphql-hacking-poc",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Playing around with GraphQL features on a client and server",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon ./server/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YouGoJoe/graphql-hacking-poc.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/YouGoJoe/graphql-hacking-poc/issues"
+  },
+  "homepage": "https://github.com/YouGoJoe/graphql-hacking-poc#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "graphql": "^16.6.0",
+    "graphql-sse": "^1.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
