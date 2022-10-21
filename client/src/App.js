@@ -1,7 +1,22 @@
-import logo from './logo.svg';
-import './App.css';
+import gql from "graphql-tag";
+import { useSubscription } from "@apollo/client";
+import logo from "./logo.svg";
+import "./App.css";
+
+const subQuery = gql`
+  subscription {
+    greetings
+  }
+`;
 
 function App() {
+  let results;
+  const { loading, data } = useSubscription(subQuery, {
+    onData: ({ data }) => {
+      console.log(`data in onData ${JSON.stringify(data)}`);
+    },
+  });
+
   return (
     <div className="App">
       <header className="App-header">
@@ -15,7 +30,7 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn React
+          {data?.greetings}
         </a>
       </header>
     </div>

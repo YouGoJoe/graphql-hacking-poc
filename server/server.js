@@ -1,6 +1,16 @@
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from "graphql";
-import express from "express"; // yarn add express
+import { ApolloServer } from "apollo-server-express";
+import express from "express";
 import { createHandler } from "graphql-sse";
+import cors from "cors";
+
+let num = 0;
+const nums = [];
+setInterval(() => {
+  nums.push(num);
+  num++;
+  console.log(`pushed ${num}`);
+}, 1000);
 
 /**
  * Construct a GraphQL schema and define the necessary resolvers.
@@ -28,8 +38,8 @@ const schema = new GraphQLSchema({
       greetings: {
         type: GraphQLString,
         subscribe: async function* () {
-          for (const hi of ["Hi", "Bonjour", "Hola", "Ciao", "Zdravo"]) {
-            yield { greetings: hi };
+          for (const numeral of nums) {
+            yield { greetings: numeral.toString() };
           }
         },
       },
@@ -37,12 +47,30 @@ const schema = new GraphQLSchema({
   }),
 });
 
+const app = express({ origin: "*" });
+app.use(cors());
+
+const server = new ApolloServer({
+  schema,
+  introspection: true,
+  debug: true,
+});
+
+const path = "/graphql";
+const port = 4000;
+
 // Create the GraphQL over SSE handler
 const handler = createHandler({ schema });
 
 // Create an express app serving all methods on `/graphql/stream`
-const app = express();
 app.all("/graphql/stream", handler);
 
-app.listen(4000);
-console.log("Listening to port 4000");
+const startup = async () => {
+  await server.start();
+  server.applyMiddleware({ app, path });
+  app.listen(port, () => {
+    console.log(`Up at http://localhost:${port}${path}/`);
+  });
+};
+
+startup();
