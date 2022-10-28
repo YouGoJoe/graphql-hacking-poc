@@ -1,16 +1,23 @@
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from "graphql";
+import { PubSub } from "graphql-subscriptions"
 import { ApolloServer } from "apollo-server-express";
 import express from "express";
 import { createHandler } from "graphql-sse";
 import cors from "cors";
 
-let num = 0;
-const nums = [];
-setInterval(() => {
-  nums.push(num);
-  num++;
-  console.log(`pushed ${num}`);
-}, 1000);
+const pubsub = new PubSub();
+
+const INCREMENT_CHANGE = "increment_changed"
+
+
+import { interval } from 'rxjs';
+const numbers = interval(1000);
+
+numbers.subscribe(num => {
+  pubsub.publish(INCREMENT_CHANGE,{greetings: num});
+})
+
+
 
 /**
  * Construct a GraphQL schema and define the necessary resolvers.
@@ -37,10 +44,8 @@ const schema = new GraphQLSchema({
     fields: {
       greetings: {
         type: GraphQLString,
-        subscribe: async function* () {
-          for (const numeral of nums) {
-            yield { greetings: numeral.toString() };
-          }
+        subscribe: (parent, args) => {
+          return pubsub.asyncIterator(INCREMENT_CHANGE);
         },
       },
     },
