@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/YouGoJoe/graphql-hacking-poc#readme",
   "dependencies": {
+    "@graphql-tools/schema": "^9.0.7",
     "apollo-server-express": "^3.10.3",
     "cors": "^2.8.5",
     "express": "^4.18.2",

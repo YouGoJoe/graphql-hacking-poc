@@ -1,56 +1,41 @@
-import { GraphQLSchema, GraphQLObjectType, GraphQLString } from "graphql";
-import { PubSub } from "graphql-subscriptions"
-import { ApolloServer } from "apollo-server-express";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import { PubSub } from "graphql-subscriptions";
+import { ApolloServer, gql } from "apollo-server-express"; // swap to graphql-yoga
 import express from "express";
 import { createHandler } from "graphql-sse";
 import cors from "cors";
+import { interval } from "rxjs";
 
 const pubsub = new PubSub();
-
-const INCREMENT_CHANGE = "increment_changed"
-
-
-import { interval } from 'rxjs';
+const INCREMENT_CHANGE = "increment_changed";
 const numbers = interval(1000);
-
-numbers.subscribe(num => {
-  pubsub.publish(INCREMENT_CHANGE,{greetings: num});
-})
-
-
-
-/**
- * Construct a GraphQL schema and define the necessary resolvers.
- *
- * type Query {
- *   hello: String
- * }
- * type Subscription {
- *   greetings: String
- * }
- */
-const schema = new GraphQLSchema({
-  query: new GraphQLObjectType({
-    name: "Query",
-    fields: {
-      hello: {
-        type: GraphQLString,
-        resolve: () => "world",
-      },
-    },
-  }),
-  subscription: new GraphQLObjectType({
-    name: "Subscription",
-    fields: {
-      greetings: {
-        type: GraphQLString,
-        subscribe: (parent, args) => {
-          return pubsub.asyncIterator(INCREMENT_CHANGE);
-        },
-      },
-    },
-  }),
+numbers.subscribe((num) => {
+  pubsub.publish(INCREMENT_CHANGE, { greetings: num });
 });
+
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+  type Subscription {
+    greetings: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    hello: () => "world",
+  },
+  Subscription: {
+    greetings: {
+      subscribe: (parent, args) => {
+        return pubsub.asyncIterator(INCREMENT_CHANGE);
+      },
+    },
+  },
+};
+
+const schema = makeExecutableSchema({ typeDefs, resolvers });
 
 const app = express({ origin: "*" });
 app.use(cors());
