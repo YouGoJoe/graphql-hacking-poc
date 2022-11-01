@@ -1,5 +1,5 @@
 import gql from "graphql-tag";
-import { useSubscription } from "@apollo/client";
+import { useSubscription, useMutation } from "@apollo/client";
 import logo from "./logo.svg";
 import "./App.css";
 
@@ -9,13 +9,31 @@ const subQuery = gql`
   }
 `;
 
+const chatQuery = gql`
+  subscription {
+    chatroom {
+      name
+      message
+    }
+  }
+`;
+
+const chatMutation = gql`
+  mutation chatMutation($name: String!, $message: String!) {
+    sendMessage(name: $name, message: $message)
+  }
+`;
+
 function App() {
-  let results;
-  const { loading, data } = useSubscription(subQuery, {
-    onData: ({ data }) => {
-      console.log(`data in onData ${JSON.stringify(data)}`);
+  const { data } = useSubscription(subQuery);
+
+  const { data: data2 } = useSubscription(chatQuery, {
+    onData: ({ data: data2 }) => {
+      console.log(`data in onData ${JSON.stringify(data2)}`);
     },
   });
+
+  const [sendMessage, { data: data3 }] = useMutation(chatMutation);
 
   return (
     <div className="App">
@@ -32,6 +50,14 @@ function App() {
         >
           {data?.greetings}
         </a>
+
+        <button
+          onClick={() =>
+            sendMessage({ variables: { name: "joe", message: "hello" } })
+          }
+        >
+          Let's go
+        </button>
       </header>
     </div>
   );

@@ -7,7 +7,9 @@ import cors from "cors";
 import { interval } from "rxjs";
 
 const pubsub = new PubSub();
+
 const INCREMENT_CHANGE = "increment_changed";
+const CHAT_MESSAGE = "chat_message";
 const numbers = interval(1000);
 numbers.subscribe((num) => {
   pubsub.publish(INCREMENT_CHANGE, { greetings: num });
@@ -17,8 +19,19 @@ const typeDefs = gql`
   type Query {
     hello: String
   }
+
+  type ChatMessage {
+    name: String!
+    message: String!
+  }
+
   type Subscription {
     greetings: String
+    chatroom: ChatMessage!
+  }
+
+  type Mutation {
+    sendMessage(name: String!, message: String!): Boolean!
   }
 `;
 
@@ -26,11 +39,24 @@ const resolvers = {
   Query: {
     hello: () => "world",
   },
+
   Subscription: {
     greetings: {
-      subscribe: (parent, args) => {
+      subscribe: () => {
         return pubsub.asyncIterator(INCREMENT_CHANGE);
       },
+    },
+    chatroom: {
+      subscribe: () => {
+        return pubsub.asyncIterator(CHAT_MESSAGE);
+      },
+    },
+  },
+
+  Mutation: {
+    sendMessage: (_, { name, message }) => {
+      pubsub.publish(CHAT_MESSAGE, { chatroom: { name, message } });
+      return true;
     },
   },
 };
