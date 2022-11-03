@@ -1,13 +1,8 @@
+import { useState, useEffect } from "react";
 import gql from "graphql-tag";
 import { useSubscription, useMutation } from "@apollo/client";
 import logo from "./logo.svg";
 import "./App.css";
-
-const subQuery = gql`
-  subscription {
-    greetings
-  }
-`;
 
 const chatQuery = gql`
   subscription {
@@ -25,15 +20,16 @@ const chatMutation = gql`
 `;
 
 function App() {
-  const { data } = useSubscription(subQuery);
+  const [userName, setUserName] = useState("Anonymous");
+  const [chatMessage, setChatMessage] = useState("");
+  const [chatMessages, setChatMessages] = useState([]);
 
-  const { data: data2 } = useSubscription(chatQuery, {
-    onData: ({ data: data2 }) => {
-      console.log(`data in onData ${JSON.stringify(data2)}`);
-    },
+  useSubscription(chatQuery, {
+    onData: ({ data }) =>
+      setChatMessages([...chatMessages, data?.data?.chatroom]),
   });
 
-  const [sendMessage, { data: data3 }] = useMutation(chatMutation);
+  const [sendMessage] = useMutation(chatMutation);
 
   return (
     <div className="App">
@@ -42,18 +38,23 @@ function App() {
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {data?.greetings}
-        </a>
+        <input
+          onChange={(event) => setUserName(event.target.value)}
+          value={userName}
+        />
+        <input
+          onChange={(event) => setChatMessage(event.target.value)}
+          value={chatMessage}
+        />
+        {chatMessages.map(({ name, message }, index) => (
+          <div key={index}>
+            <strong>{name} says:</strong> {message}
+          </div>
+        ))}
 
         <button
           onClick={() =>
-            sendMessage({ variables: { name: "joe", message: "hello" } })
+            sendMessage({ variables: { name: userName, message: chatMessage } })
           }
         >
           Let's go
