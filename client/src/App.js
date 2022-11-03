@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import gql from "graphql-tag";
 import { useSubscription, useMutation } from "@apollo/client";
-import logo from "./logo.svg";
 import "./App.css";
 
 const chatQuery = gql`
@@ -20,24 +19,29 @@ const chatMutation = gql`
 `;
 
 function App() {
+  const bottomRef = useRef(null);
   const [userName, setUserName] = useState("Anonymous");
   const [chatMessage, setChatMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
 
   useSubscription(chatQuery, {
     onData: ({ data }) =>
-      setChatMessages([...chatMessages, data?.data?.chatroom]),
+      setChatMessages([data?.data?.chatroom, ...chatMessages]),
   });
 
   const [sendMessage] = useMutation(chatMutation);
 
+  useEffect(() => {
+    // 👇️ scroll to bottom every time messages change
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
+
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
+        <h2>Joe's dumb chatroom PoC</h2>
+      </header>
+      <div>
         <input
           onChange={(event) => setUserName(event.target.value)}
           value={userName}
@@ -46,20 +50,35 @@ function App() {
           onChange={(event) => setChatMessage(event.target.value)}
           value={chatMessage}
         />
-        {chatMessages.map(({ name, message }, index) => (
-          <div key={index}>
-            <strong>{name} says:</strong> {message}
-          </div>
-        ))}
-
         <button
           onClick={() =>
             sendMessage({ variables: { name: userName, message: chatMessage } })
           }
         >
-          Let's go
+          Send
         </button>
-      </header>
+
+        <div
+          style={{
+            backgroundColor: "beige",
+            fontFamily: "monospace",
+            height: "30vh",
+            width: "80%",
+            marginLeft: "10%",
+            overflowY: "scroll",
+            display: "flex",
+            flexDirection: "column-reverse",
+            padding: "12px 0",
+          }}
+        >
+          <div ref={bottomRef} />
+          {chatMessages.map(({ name, message }, index) => (
+            <div key={index} style={{ backgroundColor: "transparent" }}>
+              <strong>{name} says:</strong> {message}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
