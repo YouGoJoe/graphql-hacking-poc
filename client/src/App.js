@@ -37,6 +37,24 @@ function App() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
+  const secretJoinCode = `ƒ∂ßå˚¬ÔÍ`;
+  const joinedRegex = new RegExp(secretJoinCode);
+  const unlockChat = () => {
+    sendMessage({
+      variables: {
+        name: userName,
+        message: secretJoinCode,
+      },
+    });
+    setChatRoomLocked(false);
+  };
+
+  const send = () => {
+    sendMessage({
+      variables: { name: userName, message: chatMessage },
+    });
+    setChatMessage("");
+  };
   return (
     <div className="App">
       <header className="App-header">
@@ -67,20 +85,13 @@ function App() {
             }}
             onChange={(event) => setUserName(event.target.value)}
             value={userName}
-          />
-          <button
-            onClick={() => {
-              sendMessage({
-                variables: {
-                  name: userName,
-                  message: `${userName} has joined the chat`,
-                },
-              });
-              setChatRoomLocked(false);
+            onKeyUp={(event) => {
+              if (event.code === "Enter") {
+                unlockChat();
+              }
             }}
-          >
-            Join
-          </button>
+          />
+          <button onClick={unlockChat}>Join</button>
         </div>
 
         <div
@@ -99,7 +110,13 @@ function App() {
           <div ref={bottomRef} />
           {chatMessages.map(({ name, message }, index) => (
             <div key={index} style={{ backgroundColor: "transparent" }}>
-              <strong>{name} says:</strong> {message}
+              {joinedRegex.test(message) ? (
+                <em>{name} has joined</em>
+              ) : (
+                <span>
+                  <strong>{name} says:</strong> {message}
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -116,21 +133,12 @@ function App() {
             onChange={(event) => setChatMessage(event.target.value)}
             onKeyUp={(event) => {
               if (event.code === "Enter") {
-                sendMessage({
-                  variables: { name: userName, message: chatMessage },
-                });
+                send();
               }
             }}
             value={chatMessage}
           />
-          <button
-            disabled={chatRoomLocked}
-            onClick={() =>
-              sendMessage({
-                variables: { name: userName, message: chatMessage },
-              })
-            }
-          >
+          <button disabled={chatRoomLocked} onClick={send}>
             Send
           </button>
         </div>
