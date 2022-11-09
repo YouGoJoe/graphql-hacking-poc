@@ -21,6 +21,7 @@ const chatMutation = gql`
 function App() {
   const bottomRef = useRef(null);
   const [userName, setUserName] = useState("Anonymous");
+  const [chatRoomLocked, setChatRoomLocked] = useState(true);
   const [chatMessage, setChatMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
 
@@ -42,21 +43,45 @@ function App() {
         <h2>Joe's dumb chatroom PoC</h2>
       </header>
       <div>
-        <input
-          onChange={(event) => setUserName(event.target.value)}
-          value={userName}
-        />
-        <input
-          onChange={(event) => setChatMessage(event.target.value)}
-          value={chatMessage}
-        />
-        <button
-          onClick={() =>
-            sendMessage({ variables: { name: userName, message: chatMessage } })
-          }
+        <div
+          style={{
+            display: "flex",
+            width: "80%",
+            marginLeft: "10%",
+            justifyContent: "center",
+            marginBottom: "12px",
+          }}
         >
-          Send
-        </button>
+          <strong
+            style={{
+              color: "whitesmoke",
+              fontSize: "24px",
+              marginRight: "8px",
+            }}
+          >
+            Set your display name:
+          </strong>
+          <input
+            style={{
+              fontSize: "24px",
+            }}
+            onChange={(event) => setUserName(event.target.value)}
+            value={userName}
+          />
+          <button
+            onClick={() => {
+              sendMessage({
+                variables: {
+                  name: userName,
+                  message: `${userName} has joined the chat`,
+                },
+              });
+              setChatRoomLocked(false);
+            }}
+          >
+            Join
+          </button>
+        </div>
 
         <div
           style={{
@@ -77,6 +102,37 @@ function App() {
               <strong>{name} says:</strong> {message}
             </div>
           ))}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            width: "80%",
+            marginLeft: "10%",
+          }}
+        >
+          <input
+            disabled={chatRoomLocked}
+            style={{ flexGrow: 1, fontSize: "18px" }}
+            onChange={(event) => setChatMessage(event.target.value)}
+            onKeyUp={(event) => {
+              if (event.code === "Enter") {
+                sendMessage({
+                  variables: { name: userName, message: chatMessage },
+                });
+              }
+            }}
+            value={chatMessage}
+          />
+          <button
+            disabled={chatRoomLocked}
+            onClick={() =>
+              sendMessage({
+                variables: { name: userName, message: chatMessage },
+              })
+            }
+          >
+            Send
+          </button>
         </div>
       </div>
     </div>
